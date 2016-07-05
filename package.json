@@ -1,0 +1,15 @@
+{
+  "name": "webgl-test",
+  "version": "1.0.0",
+  "description": "First steps into the wordl of WebGL",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "express": "^4.14.0"
+  }
+}
