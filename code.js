@@ -93,13 +93,17 @@
     {
         context.useProgram(program);
 
+        var mat = mat3.create();
+        var outMat = mat3.create();
+        var pos = vec2.create();
+
         // look up where the vertex data needs to go.
         var positionLocation = context.getAttribLocation(program, "a_position");
 
         // lookup uniforms
         var resolutionLocation = context.getUniformLocation(program, "u_resolution");
-        var offsetLocation = context.getUniformLocation(program, "u_offset");
         var colorLocation = context.getUniformLocation(program, "u_color");
+        var matrixLocation = context.getUniformLocation(program, "u_matrix");
 
         // set the resolution
         context.uniform2f(resolutionLocation, canvas.width, canvas.height);
@@ -136,23 +140,46 @@
         context.clear(context.COLOR_BUFFER_BIT);
 
         var canvasRect = canvas.getBoundingClientRect();
+        var angle = 0;
+        var scale = [2, 1];
+        var origin = [-50, -50];
 
         // Set a handler to draw a new rectangle each time the canvas is clicked
         canvas.addEventListener("click", function(event)
         {
+            vec2.set(pos, event.clientX - canvasRect.left, event.clientY - canvasRect.top);
+
+            // Set a color by adjusting the color uniform
+            context.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
+        });
+
+        var update = function() {
+            angle++;
+
             // Clear the canvas.
             context.clearColor(0, 0, 0, 1);
             context.clear(context.COLOR_BUFFER_BIT);
 
-            // Set the position of each rectangle by adjusting the offset uniform
-            context.uniform2f(offsetLocation, event.clientX - canvasRect.left, event.clientY - canvasRect.top);
+            // TODO: Reemplazar todo esto por una sola llamada a un metodo fromTransform
+            // x, y, rotation, scaleX, scaleY, originX, originY
 
-            // Set a color by adjusting the color uniform
-            context.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
+            mat3.identity(mat);
+            mat3.identity(outMat);
+
+            mat3.translate(outMat, mat, pos);
+            mat3.rotate(mat, outMat, 0.017 * angle);
+            mat3.scale(outMat, mat, scale);
+            mat3.translate(mat, outMat, origin);
+            
+            context.uniformMatrix3fv(matrixLocation, false, mat);
 
             // Draw the rectangle
             context.drawArrays(context.TRIANGLES, 0, 6);
-        });
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
     });
 
 })();
