@@ -141,8 +141,6 @@
 
         var canvasRect = canvas.getBoundingClientRect();
         var angle = 0;
-        var scale = [2, 1];
-        var origin = [-50, -50];
 
         // Set a handler to draw a new rectangle each time the canvas is clicked
         canvas.addEventListener("click", function(event)
@@ -159,18 +157,29 @@
             // Clear the canvas.
             context.clearColor(0, 0, 0, 1);
             context.clear(context.COLOR_BUFFER_BIT);
-
-            // TODO: Reemplazar todo esto por una sola llamada a un metodo fromTransform
-            // x, y, rotation, scaleX, scaleY, originX, originY
-
-            mat3.identity(mat);
-            mat3.identity(outMat);
-
-            mat3.translate(outMat, mat, pos);
-            mat3.rotate(mat, outMat, 0.017 * angle);
-            mat3.scale(outMat, mat, scale);
-            mat3.translate(mat, outMat, origin);
             
+            var rad = 0.017 * angle;
+            var cos = Math.cos(rad);
+            var sin = Math.sin(rad);
+
+            var scaleX = 1;
+            var scaleY = 2;
+
+            var originX = -50;
+            var originY = -50;
+
+            // Build local matrix from position, rotation, scale and origin
+            // TODO: Try multiplying some of these matrices to test out nesting structures
+            mat[0] = cos * scaleX;
+            mat[1] = sin * scaleX;
+            mat[2] = 0;
+            mat[3] = -sin * scaleY;
+            mat[4] = cos * scaleY;
+            mat[5] = 0;
+            mat[6] = originX * mat[0] + originY * mat[3] + 1 * pos[0];
+            mat[7] = originX * mat[1] + originY * mat[4] + 1 * pos[1];
+            mat[8] = 1;
+
             context.uniformMatrix3fv(matrixLocation, false, mat);
 
             // Draw the rectangle
