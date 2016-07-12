@@ -8,9 +8,6 @@
         {
             context = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 
-            context.viewportWidth = canvas.width;
-            context.viewportHeight = canvas.height;
-
             if (context)
             {
                 resolve();
@@ -93,8 +90,6 @@
     {
         context.useProgram(program);
 
-        var mat = mat3.create();
-        var outMat = mat3.create();
         var pos = vec2.create();
 
         // look up where the vertex data needs to go.
@@ -146,10 +141,12 @@
         canvas.addEventListener("click", function(event)
         {
             vec2.set(pos, event.clientX - canvasRect.left, event.clientY - canvasRect.top);
-
-            // Set a color by adjusting the color uniform
-            context.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
         });
+
+        var mat_1 = mat3.create();
+        var mat_2 = mat3.create();
+        
+        var outMat = mat3.create();
 
         var update = function() {
             angle++;
@@ -162,7 +159,7 @@
             var cos = Math.cos(rad);
             var sin = Math.sin(rad);
 
-            var scaleX = 1;
+            var scaleX = 2;
             var scaleY = 2;
 
             var originX = -50;
@@ -170,17 +167,45 @@
 
             // Build local matrix from position, rotation, scale and origin
             // TODO: Try multiplying some of these matrices to test out nesting structures
-            mat[0] = cos * scaleX;
-            mat[1] = sin * scaleX;
-            mat[2] = 0;
-            mat[3] = -sin * scaleY;
-            mat[4] = cos * scaleY;
-            mat[5] = 0;
-            mat[6] = originX * mat[0] + originY * mat[3] + 1 * pos[0];
-            mat[7] = originX * mat[1] + originY * mat[4] + 1 * pos[1];
-            mat[8] = 1;
+            mat_1[0] = cos * scaleX;
+            mat_1[1] = sin * scaleX;
+            mat_1[2] = 0;
+            mat_1[3] = -sin * scaleY;
+            mat_1[4] = cos * scaleY;
+            mat_1[5] = 0;
+            mat_1[6] = originX * mat_1[0] + originY * mat_1[3] + 1 * pos[0];
+            mat_1[7] = originX * mat_1[1] + originY * mat_1[4] + 1 * pos[1];
+            mat_1[8] = 1;
 
-            context.uniformMatrix3fv(matrixLocation, false, mat);
+            context.uniformMatrix3fv(matrixLocation, false, mat_1);
+            context.uniform4f(colorLocation, 1, 0, 0, 1);
+
+            // Draw the rectangle
+            context.drawArrays(context.TRIANGLES, 0, 6);
+
+            rad = 0.017 * angle;
+            cos = Math.cos(rad);
+            sin = Math.sin(rad);
+
+            scaleX = 1;
+            scaleY = 1;
+
+            // Build local matrix from position, rotation, scale and origin
+            // TODO: Try multiplying some of these matrices to test out nesting structures
+            mat_2[0] = cos * scaleX;
+            mat_2[1] = sin * scaleX;
+            mat_2[2] = 0;
+            mat_2[3] = -sin * scaleY;
+            mat_2[4] = cos * scaleY;
+            mat_2[5] = 0;
+            mat_2[6] = originX * (mat_2[0]/scaleX) + originY * (mat_2[3]/scaleY) + 1 * 0;
+            mat_2[7] = originX * (mat_2[1]/scaleX) + originY * (mat_2[4]/scaleY) + 1 * 0;
+            mat_2[8] = 1;
+            
+            mat3.multiply(outMat, mat_1, mat_2);
+            context.uniformMatrix3fv(matrixLocation, false, outMat);
+            
+            context.uniform4f(colorLocation, 0, 1, 0, 1);
 
             // Draw the rectangle
             context.drawArrays(context.TRIANGLES, 0, 6);
@@ -192,4 +217,3 @@
     });
 
 })();
-
